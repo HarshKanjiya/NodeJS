@@ -10,7 +10,6 @@ const {
   } = require("../controller/user");
 
 router
-  .post("/", createUsers)
   .get("/", getAllUsers)
   .get("/:id", getUser)
   .put("/:id", replaceUser)

@@ -2,8 +2,53 @@ const fs = require("fs");
 const model = require("../model/product");
 const { Mongoose } = require("mongoose");
 const Product = model.Product;
+const ejs = require("ejs");
+const path = require("path");
+
+//view
+
+const getAllProductsSSR = (req, res) => {
+Product.find()
+    .then((products) => {
+      ejs.renderFile(
+        path.resolve(__dirname, "../pages/index.ejs"), // Ensure this path is correct
+        { products: products }, // Passing all products
+        (err, str) => {
+          if (err) {
+            console.error("Error rendering EJS:", err);
+            return res.status(500).send("Internal Server Error");
+          }
+          res.status(200).send(str);
+        }
+      );
+    })
+    .catch((error) => {
+      console.error("Error retrieving products:", error);
+      res.status(404).send("Products not found");
+    });
+};
+
+
+
+const getAddForm = (req, res) => {
+        ejs.renderFile(
+          path.resolve(__dirname, "../pages/add.ejs"), // Ensure this path is correct
+          (err, str) => {
+            if (err) {
+              console.error("Error rendering EJS:", err);
+              return res.status(500).send("Internal Server Error");
+            }
+            res.status(200).send(str);
+          }
+        );
+   
+  };
+  
+
+
 
 // MVC
+// REST API
 const createProducts = (req, res) => {
   const product = new Product(req.body);
   product
@@ -29,6 +74,7 @@ const getAllProducts = (req, res) => {
       res.status(404).json(error);
     });
 };
+
 
 const getProduct = (req, res) => {
   const id = req.params.id;
@@ -108,6 +154,7 @@ const deleteProduct = (req, res) => {
 module.exports = {
   createProducts,
   getAllProducts,
+  getAllProductsSSR,getAddForm,
   getProduct,
   replaceProduct,
   updateProduct,

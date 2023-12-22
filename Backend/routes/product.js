@@ -7,10 +7,13 @@ const {
     replaceProduct,
     updateProduct,
     deleteProduct,
+    getAllProductsSSR,getAddForm
   } = require("../controller/product");
 
 router
   .post("/", createProducts)
+  .get("/ssr", getAllProductsSSR)
+  .get("/add", getAddForm)
   .get("/", getAllProducts)
   .get("/:id", getProduct)
   .put("/:id", replaceProduct)
