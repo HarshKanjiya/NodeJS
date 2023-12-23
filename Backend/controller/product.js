@@ -4,11 +4,12 @@ const { Mongoose } = require("mongoose");
 const Product = model.Product;
 const ejs = require("ejs");
 const path = require("path");
+const { log } = require("console");
 
 //view
 
 const getAllProductsSSR = (req, res) => {
-Product.find()
+  Product.find()
     .then((products) => {
       ejs.renderFile(
         path.resolve(__dirname, "../pages/index.ejs"), // Ensure this path is correct
@@ -28,24 +29,18 @@ Product.find()
     });
 };
 
-
-
 const getAddForm = (req, res) => {
-        ejs.renderFile(
-          path.resolve(__dirname, "../pages/add.ejs"), // Ensure this path is correct
-          (err, str) => {
-            if (err) {
-              console.error("Error rendering EJS:", err);
-              return res.status(500).send("Internal Server Error");
-            }
-            res.status(200).send(str);
-          }
-        );
-   
-  };
-  
-
-
+  ejs.renderFile(
+    path.resolve(__dirname, "../pages/add.ejs"), // Ensure this path is correct
+    (err, str) => {
+      if (err) {
+        console.error("Error rendering EJS:", err);
+        return res.status(500).send("Internal Server Error");
+      }
+      res.status(200).send(str);
+    }
+  );
+};
 
 // MVC
 // REST API
@@ -63,23 +58,41 @@ const createProducts = (req, res) => {
     });
 };
 
-const getAllProducts = (req, res) => {
-  Product.find({})
-    .then((products) => {
-      console.log("Retrieved products:", products);
-      res.status(200).json(products);
-    })
-    .catch((error) => {
-      console.error("Error retrieving data:", error);
-      res.status(404).json(error);
-    });
+const getAllProducts = async (req, res) => {
+  try {
+    let query = Product.find();
+    let pageSize = 4;
+    let page = req.query.page || 1; // Default to page 1 if not provided
+
+    if (req.query.sort) {
+      const products = await query
+        .sort({ [req.query.sort]: req.query.order })
+        .skip(pageSize * (page - 1))
+        .limit(pageSize)
+        .exec();
+      res.json(products);
+    } else if (req.query.page) {
+      const products = await query
+        .skip(pageSize * (page - 1))
+        .limit(pageSize)
+        .exec();
+      res.json(products);
+    } else {
+      const products = await query.exec();
+      res.json(products);
+    }
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
 };
 
 
-const getProduct = (req, res) => {
+ 
+const getProduct = async (req, res) => {
   const id = req.params.id;
 
-  Product.findById(id)
+  await Product.findById(id)
     .then((product) => {
       if (product) {
         console.log("Product Found:", product);
@@ -154,7 +167,8 @@ const deleteProduct = (req, res) => {
 module.exports = {
   createProducts,
   getAllProducts,
-  getAllProductsSSR,getAddForm,
+  getAllProductsSSR,
+  getAddForm,
   getProduct,
   replaceProduct,
   updateProduct,

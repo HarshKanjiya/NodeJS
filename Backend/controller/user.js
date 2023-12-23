@@ -18,7 +18,7 @@ const getAllUsers = (req, res) => {
 const getUser = (req, res) => {
   const id = req.params.id;
 
-  User.findById(id)
+  User.findById(id).populate('cart')
     .then((user) => {
       if (user) {
         console.log("User Found:", user);

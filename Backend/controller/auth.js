@@ -12,22 +12,20 @@ const model = require("../model/user");
 // const mongoose = require("mongoose");
 const User = model.User;
 
-exports.createUsers = (req, res) => {
+exports.signUp = (req, res) => {
   const user = new User(req.body);
   var token = jwt.sign({ email: req.body.email }, privateKey, {
     algorithm: "RS256",
   });
 
   const hashPassword = bcrypt.hashSync(req.body.password, 16);
-
   user.password = hashPassword;
   user.token = token;
-
   user
     .save({})
     .then((savedUser) => {
       console.log("Product added successfully:", savedUser);
-      res.status(201).json(savedUser);
+      res.status(201).json({ token });
     })
     .catch((error) => {
       console.error("Error saving user:", error);
@@ -35,23 +33,26 @@ exports.createUsers = (req, res) => {
     });
 };
 
-exports.login = (req, res) => {
-  try{
-    const user = User.findOne({email:req.body.email})
-  const isAuth = bcrypt.compareSync(req.body.password, user.password);
-if(isAuth){
-  var token = jwt.sign({ email: req.body.email }, privateKey, {
-    algorithm: "RS256",
-  });
-}
-  }catch(error){
-    return res.status(403).send('Wrong username or password')
+exports.login = async (req, res) => {
+  try {
+    const doc = await User.findOne({ email: req.body.email });
+    if (!doc) {
+      return res.status(403).send("User not found");
+    }
+
+    const isAuth = bcrypt.compareSync(req.body.password, doc.password);
+    if (isAuth) {
+      var token = jwt.sign({ email: req.body.email }, privateKey, {
+        algorithm: "RS256",
+      });
+      doc.token = token;
+      await doc.save();
+      res.json({ token });
+    } else {
+      res.status(403).send("ERROR: Wrong username or password");
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).send("Internal Server Error");
   }
-  
-  
-  
-
-
-
-  
 };

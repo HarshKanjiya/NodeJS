@@ -1,12 +1,13 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
   firstName: { type: String, required: true },
   lastName: String,
+  cart: [{ type: Schema.Types.ObjectId, ref: "Product" }],
   email: {
     type: String,
-    unique: true,   
+    unique: true,
     validate: {
       validator: function (v) {
         return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v);
@@ -19,4 +20,4 @@ const userSchema = new Schema({
   token: String,
 });
 
-exports.User = mongoose.model('User', userSchema);
+exports.User = mongoose.model("User", userSchema);
