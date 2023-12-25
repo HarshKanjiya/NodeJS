@@ -1,3 +1,17 @@
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  console.log(`A socket connection to the server has been made - socket.id: `,socket.id);
+
+  socket.emit('msg:',{player:'one'})
+
+  socket.on('serverMSG',(data)=>{
+    console.log(data);
+  })
+
+</script>
+
+
 <link
   rel="stylesheet"
   href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"

@@ -1,17 +1,24 @@
 require("dotenv").config();
 const express = require("express");
+require("./event");
 const morgan = require("morgan");
 const productRouter = require("./routes/product");
 const userRouter = require("./routes/user");
 const mongoose = require("mongoose");
 const server = express();
+
+const app = require("http").createServer(server);
+const io = require("socket.io")(app);
 const cors = require("cors");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 const authRouter = require("./routes/auth");
 
 const fs = require("fs");
-const publicKey = fs.readFileSync(path.resolve(__dirname,"./public.key"), "utf-8");
+const publicKey = fs.readFileSync(
+  path.resolve(__dirname, "./public.key"),
+  "utf-8"
+);
 
 // db connection
 main().catch((err) => console.log("Database Connection Error:", err));
@@ -73,6 +80,16 @@ const auth = (req, res, next) => {
   }
 };
 
+io.on("connection", (socket) => {
+  console.log(`A socket connection to the server has been made - socket.id: `,socket.id);
+  
+  socket.on("msg",  (data) =>{
+    console.log({data});
+  })
+
+  socket.emit('serverMSG',{server:'hi'})
+});
+
 server.use(cors());
 //body parser
 server.use(express.json());
@@ -81,7 +98,8 @@ server.use(express.urlencoded({ extended: true })); // or false, depending on yo
 server.use(morgan("combined"));
 server.use(express.static(path.resolve(__dirname, process.env.PUBLIC_DIR)));
 server.use("/auth", authRouter.router);
-server.use("/products", auth, productRouter.router);
+// server.use("/products", auth, productRouter.router);
+server.use("/products", productRouter.router);
 server.use("/users", auth, userRouter.router);
 server.use("*", (req, res) => {
   res.sendFile(path.resolve(__dirname, "build", "index.html"));
@@ -91,6 +109,9 @@ server.use("*", (req, res) => {
 
 server.use(express.static("public"));
 
-server.listen(process.env.PORT, () => {
+
+
+
+app.listen(process.env.PORT, () => {
   console.log(`Server started on ${process.env.PORT}`);
 });
